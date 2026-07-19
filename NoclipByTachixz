@@ -1,0 +1,127 @@
+-- ============================================
+-- t-noclip (ЧИСТЫЙ NoClip)
+-- Универсальный скрипт для Roblox
+-- Только проход сквозь стены, без полёта
+-- Меню океанического цвета, перетаскиваемое
+-- ============================================
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui")
+
+-- Создаём GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TNoclip"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = gui
+
+-- Главное окно (океанический цвет)
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 140, 0, 80)
+mainFrame.Position = UDim2.new(0.02, 0, 0.4, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 80, 100) -- глубокий океан
+mainFrame.BackgroundTransparency = 0.1
+mainFrame.BorderSizePixel = 2
+mainFrame.BorderColor3 = Color3.fromRGB(0, 200, 220) -- бирюза
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Заголовок
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 24)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "🌊 t-noclip"
+title.TextColor3 = Color3.fromRGB(0, 230, 255)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+title.Parent = mainFrame
+
+-- Кнопка ON/OFF
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0.6, 0, 0, 35)
+toggleButton.Position = UDim2.new(0.2, 0, 0.4, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 200) -- бирюзовый
+toggleButton.BackgroundTransparency = 0.2
+toggleButton.BorderSizePixel = 2
+toggleButton.BorderColor3 = Color3.fromRGB(0, 220, 255)
+toggleButton.Text = "ON"
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextScaled = true
+toggleButton.Parent = mainFrame
+
+-- ========== ЛОГИКА NoClip ==========
+local noclipActive = false
+
+local function toggleNoclip(state)
+    local char = player.Character
+    if not char then return end
+
+    if state then
+        -- Включаем NoClip: отключаем коллизию у всех частей тела
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+        noclipActive = true
+    else
+        -- Выключаем NoClip: возвращаем коллизию
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+        noclipActive = false
+    end
+end
+
+-- ========== ОБРАБОТЧИК КНОПКИ ==========
+toggleButton.MouseButton1Click:Connect(function()
+    if not noclipActive then
+        toggleNoclip(true)
+        toggleButton.Text = "OFF"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50) -- красный
+        toggleButton.BorderColor3 = Color3.fromRGB(255, 100, 100)
+    else
+        toggleNoclip(false)
+        toggleButton.Text = "ON"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 200) -- бирюзовый
+        toggleButton.BorderColor3 = Color3.fromRGB(0, 220, 255)
+    end
+end)
+
+-- ========== АВТОСБРОС ПРИ СМЕНЕ ПЕРСОНАЖА ==========
+player.CharacterAdded:Connect(function(newChar)
+    wait(0.5)
+    if noclipActive then
+        -- Сбрасываем состояние, чтобы не было глюков
+        for _, part in pairs(newChar:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+            end
+        end
+        noclipActive = false
+        toggleButton.Text = "ON"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
+        toggleButton.BorderColor3 = Color3.fromRGB(0, 220, 255)
+    end
+end)
+
+-- ========== СБРОС ПРИ ВЫХОДЕ ==========
+game:BindToClose(function()
+    if noclipActive then
+        local char = player.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end)
+
+print("🌊 t-noclip (чистый NoClip) загружен")
